@@ -409,6 +409,8 @@ class LocalDevelop(develop.develop):
     command_name = 'develop'
 
     def install_wrapper_scripts(self, dist):
+        if sys.platform == 'win32':
+            return develop.develop.install_wrapper_scripts(self, dist)
         if not self.exclude_scripts:
             for args in override_get_script_args(dist):
                 self.write_script(*args)
@@ -462,7 +464,13 @@ class LocalInstallScripts(install_scripts.install_scripts):
             # entry-points listed for this package.
             return
 
-        for args in override_get_script_args(dist, executable, is_wininst):
+        if os.name != 'nt':
+            get_script_args = override_get_script_args
+        else:
+            get_script_args = easy_install.get_script_args
+            executable = '"%s"' % executable
+
+        for args in get_script_args(dist, executable, is_wininst):
             self.write_script(*args)
 
 
@@ -622,10 +630,14 @@ def _get_increment_kwargs(git_dir, tag):
         version_spec = tag + "..HEAD"
     else:
         version_spec = "HEAD"
-    changelog = git._run_git_command(['log', version_spec], git_dir)
-    header_len = len('    sem-ver:')
+    # Get the raw body of the commit messages so that we don't have to
+    # parse out any formatting whitespace and to avoid user settings on
+    # git log output affecting out ability to have working sem ver headers.
+    changelog = git._run_git_command(['log', '--pretty=%B', version_spec],
+                                     git_dir)
+    header_len = len('sem-ver:')
     commands = [line[header_len:].strip() for line in changelog.split('\n')
-                if line.lower().startswith('    sem-ver:')]
+                if line.lower().startswith('sem-ver:')]
     symbols = set()
     for command in commands:
         symbols.update([symbol.strip() for symbol in command.split(',')])
