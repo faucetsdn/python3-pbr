@@ -1,3 +1,9 @@
+python-pbr (4.0.4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Brad Cowie <brad@faucet.nz>  Wed, 06 Jun 2018 16:06:12 +1200
+
 python-pbr (3.1.1-1) unstable; urgency=medium
 
   * updating version to 3.1.1
