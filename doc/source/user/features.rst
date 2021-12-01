@@ -62,7 +62,7 @@ From this, we note a couple of the main features of *pbr*:
 - Extensive use of ``setup.cfg`` for configuration
 - Automatic package metadata generation (``version``)
 - Automatic metadata file generation (``AUTHOR``, ``ChangeLog``,
-  ``MANIFEST.in``)
+  ``MANIFEST.in``, ``RELEASENOTES.txt``)
 
 In addition, there are other things that you don't see here but which *pbr*
 will do for you:
@@ -181,6 +181,10 @@ probably a good long_description. So we'll just inject the contents of your
 You can also specify the exact file you want to use using the
 ``description-file`` parameter.
 
+You can set the ``description-content-type`` to a MIME type that may
+help rendering of the description; for example ``text/markdown`` or
+``text/x-rst; charset=UTF-8``.
+
 Requirements
 ~~~~~~~~~~~~
 
@@ -200,13 +204,15 @@ for your project and will then parse these files, split them up appropriately,
 and inject them into the ``install_requires``, ``tests_require`` and/or
 ``dependency_links`` arguments to ``setup``. Voila!
 
-You can also have a requirement file for each specific major version of Python.
-If you want to have a different package list for Python 3 then just drop a
-``requirements-py3.txt`` and it will be used instead.
-
 Finally, it is possible to specify groups of optional dependencies, or
 :ref:`"extra" requirements <extra-requirements>`, in your ``setup.cfg`` rather
 than ``setup.py``.
+
+.. versionchanged:: 5.0
+
+   Previously you could specify requirements for a given major version of
+   Python using requirments files with a ``-pyN`` suffix. This was deprecated
+   in 4.0 and removed in 5.0 in favour of environment markers.
 
 Automatic File Generation
 -------------------------
@@ -253,8 +259,25 @@ test files.
 
 __ https://packaging.python.org/tutorials/distributing-packages/#manifest-in
 
+Release Notes
+~~~~~~~~~~~~~
+
+.. admonition:: Summary
+
+    *pbr* will automatically use *reno* \'s ``build_reno`` setuptools command
+    to generate a release notes file, if reno is available and configured.
+
+If using *reno*, you may wish to include a copy of the release notes in your
+packages. *reno* provides a ``build_reno`` `setuptools command`__ and, if reno
+is present and configured, *pbr* will automatically call this to generate a
+release notes file for inclusion in your package.
+
+__ https://docs.openstack.org/reno/latest/user/setuptools.html
+
 Setup Commands
 --------------
+
+.. _build_sphinx:
 
 ``build_sphinx``
 ~~~~~~~~~~~~~~~~
@@ -264,6 +287,15 @@ Setup Commands
     *pbr* will override the Sphinx ``build_sphinx`` command to use
     *pbr*-provided package metadata and automatically generate API
     documentation.
+
+.. deprecated:: 4.2
+
+   This feature has been superseded by the `sphinxcontrib-apidoc`__ (for
+   generation of API documentation) and :ref:`pbr.sphinxext` (for configuration
+   of versioning via package metadata) extensions. It will be removed in a
+   future release.
+
+   __ https://pypi.org/project/sphinxcontrib-apidoc/
 
 Sphinx can produce auto documentation indexes based on signatures and
 docstrings of your project but you have to give it index files to tell it to
@@ -310,3 +342,29 @@ or `nose`__ (deprecated).
 __ https://testrepository.readthedocs.io/en/latest/
 __ https://nose.readthedocs.io/en/latest/
 __ https://setuptools.readthedocs.io/en/latest/setuptools.html#test-build-package-and-run-a-unittest-suite
+
+.. _pbr.sphinxext:
+
+Sphinx Extension
+----------------
+
+.. admonition:: Summary
+
+    *pbr* provides a Sphinx extension to allow you to use *pbr* version
+    metadata in your Sphinx documentation.
+
+.. versionadded:: 4.2
+
+*pbr* provides a Sphinx extension which can be used to configure version
+numbers for documentation. The package does not need to be installed for this
+to function.
+
+.. note::
+
+    The ``openstackdocstheme`` Sphinx theme provides similar functionality.
+    This should be preferred for official OpenStack projects. Refer to the
+    `documentation`__ for more information.
+
+    __ https://docs.openstack.org/openstackdocstheme/
+
+For more information on the extension, refer to :doc:`/user/using`.

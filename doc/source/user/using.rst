@@ -49,7 +49,7 @@ versions of `setuptools`__. A simple sample can be found in *pbr*'s own
     [metadata]
     name = pbr
     author = OpenStack Foundation
-    author-email = openstack-dev@lists.openstack.org
+    author-email = openstack-discuss@lists.openstack.org
     summary = OpenStack's setup automation in a reusable form
     description-file = README.rst
     description-content-type = text/x-rst; charset=UTF-8
@@ -57,7 +57,7 @@ versions of `setuptools`__. A simple sample can be found in *pbr*'s own
     project_urls =
         Bug Tracker = https://bugs.launchpad.net/pbr/
         Documentation = https://docs.openstack.org/pbr/
-        Source Code = https://git.openstack.org/cgit/openstack-dev/pbr/
+        Source Code = https://opendev.org/openstack/pbr
     license = Apache-2
     classifier =
         Development Status :: 4 - Beta
@@ -102,7 +102,7 @@ In addition, there are some modifications to other sections:
 
 For all other sections, you should refer to either the `setuptools`_
 documentation or the documentation of the package that provides the section,
-such as the ``extract_mesages`` section provided by Babel__.
+such as the ``extract_messages`` section provided by Babel__.
 
 .. note::
 
@@ -209,38 +209,86 @@ the ``Fancy`` class in ``pbr.cfg.driver``.
 
 The ``pbr`` section controls *pbr*-specific options and behaviours.
 
-``autodoc_tree_index_modules``
+``skip_git_sdist``
+  If enabled, *pbr* will not generate a manifest file from *git* commits. If
+  this is enabled, you may need to define your own `manifest template`__.
 
+  This can also be configured using the ``SKIP_GIT_SDIST`` environment
+  variable, as described :ref:`here <packaging-tarballs>`.
+
+  __ https://packaging.python.org/tutorials/distributing-packages/#manifest-in
+
+``skip_changelog``
+  If enabled, *pbr* will not generated a ``ChangeLog`` file from *git* commits.
+
+  This can also be configured using the ``SKIP_WRITE_GIT_CHANGELOG``
+  environment variable, as described :ref:`here <packaging-authors-changelog>`
+
+``skip_authors``
+  If enabled, *pbr* will not generate an ``AUTHORS`` file from *git* commits.
+
+  This can also be configured using the ``SKIP_GENERATE_AUTHORS`` environment
+  variable, as described :ref:`here <packaging-authors-changelog>`
+
+``skip_reno``
+  If enabled, *pbr* will not generate a ``RELEASENOTES.txt`` file if `reno`_ is
+  present and configured.
+
+  This can also be configured using the ``SKIP_GENERATE_RENO`` environment
+  variable, as described :ref:`here <packaging-releasenotes>`.
+
+``autodoc_tree_index_modules``
   A boolean option controlling whether *pbr* should generate an index of
   modules using ``sphinx-apidoc``. By default, all files except ``setup.py``
   are included, but this can be overridden using the ``autodoc_tree_excludes``
   option.
 
-``autodoc_tree_excludes``
+  .. deprecated:: 4.2
 
+      This feature has been replaced by the `sphinxcontrib-apidoc`_ extension.
+      Refer to the :ref:`build_sphinx` overview for more information.
+
+``autodoc_tree_excludes``
   A list of modules to exclude when building documentation using
   ``sphinx-apidoc``. Defaults to ``[setup.py]``. Refer to the
   `sphinx-apidoc man page`__ for more information.
 
-__ http://sphinx-doc.org/man/sphinx-apidoc.html
+  __ http://sphinx-doc.org/man/sphinx-apidoc.html
+
+  .. deprecated:: 4.2
+
+      This feature has been replaced by the `sphinxcontrib-apidoc`_ extension.
+      Refer to the :ref:`build_sphinx` overview for more information.
 
 ``autodoc_index_modules``
-
   A boolean option controlling whether *pbr* should itself generates
   documentation for Python modules of the project. By default, all found Python
   modules are included; some of them can be excluded by listing them in
   ``autodoc_exclude_modules``.
 
-``autodoc_exclude_modules``
+  .. deprecated:: 4.2
 
+      This feature has been replaced by the `sphinxcontrib-apidoc`_ extension.
+      Refer to the :ref:`build_sphinx` overview for more information.
+
+``autodoc_exclude_modules``
   A list of modules to exclude when building module documentation using *pbr*.
   *fnmatch* style pattern (e.g. ``myapp.tests.*``) can be used.
 
-``api_doc_dir``
+  .. deprecated:: 4.2
 
+      This feature has been replaced by the `sphinxcontrib-apidoc`_ extension.
+      Refer to the :ref:`build_sphinx` overview for more information.
+
+``api_doc_dir``
   A subdirectory inside the ``build_sphinx.source_dir`` where auto-generated
   API documentation should be written, if ``autodoc_index_modules`` is set to
   True. Defaults to ``"api"``.
+
+  .. deprecated:: 4.2
+
+      This feature has been replaced by the `sphinxcontrib-apidoc`_ extension.
+      Refer to the :ref:`build_sphinx` overview for more information.
 
 .. note::
 
@@ -252,7 +300,13 @@ __ http://sphinx-doc.org/man/sphinx-apidoc.html
    set. See the `Sphinx build configuration file`__ documentation for more
    information on configuring Sphinx.
 
-__ http://sphinx-doc.org/config.html
+   __ http://sphinx-doc.org/config.html
+
+.. versionchanged:: 4.2
+
+   The ``autodoc_tree_index_modules``, ``autodoc_tree_excludes``,
+   ``autodoc_index_modules``, ``autodoc_exclude_modules`` and ``api_doc_dir``
+   settings are all deprecated.
 
 .. versionchanged:: 2.0
 
@@ -276,6 +330,13 @@ __ http://sphinx-doc.org/config.html
    The ``build_sphinx`` plugin used to default to building both HTML and man
    page output. This is no longer the case, and you should explicitly set
    ``builders`` to ``html man`` if you wish to retain this behavior.
+
+.. deprecated:: 4.2
+
+   This feature has been superseded by the `sphinxcontrib-apidoc`_ (for
+   generation of API documentation) and :ref:`pbr.sphinxext` (for configuration
+   of versioning via package metadata) extensions. It will be removed in a
+   future release.
 
 The ``build_sphinx`` section is a version of the ``build_sphinx`` *setuptools*
 plugin provided with Sphinx. This plugin extends the original plugin to add the
@@ -328,20 +389,18 @@ Requirements
 
 Requirements files are used in place of the ``install_requires`` and
 ``extras_require`` attributes. Requirement files should be given one of the
-below names. This order is also the order that the requirements are tried in
-(where ``N`` is the Python major version number used to install the package):
+below names. This order is also the order that the requirements are tried in:
 
-* ``requirements-pyN.txt``
-* ``tools/pip-requires-py3``
 * ``requirements.txt``
 * ``tools/pip-requires``
 
 Only the first file found is used to install the list of packages it contains.
 
-.. note::
+.. versionchanged:: 5.0
 
-   The ``requirements-pyN.txt`` file is deprecated - ``requirements.txt``
-   should be universal. You can use `Environment markers`_ for this purpose.
+   Previously you could specify requirements for a given major version of
+   Python using requirements files with a ``-pyN`` suffix. This was deprecated
+   in 4.0 and removed in 5.0 in favour of environment markers.
 
 .. _extra-requirements:
 
@@ -414,4 +473,25 @@ The argument ``--coverage`` will set ``PYTHON`` to ``coverage run`` to produce
 a coverage report.  ``--coverage-package-name`` can be used to modify or narrow
 the packages traced.
 
+
+Sphinx ``conf.py``
+------------------
+
+As described in :doc:`/user/features`, *pbr* provides a Sphinx extension to
+automatically configure the version numbers for your documentation using *pbr*
+metadata.
+
+To enable this extension, you must add it to the list of extensions in
+your ``conf.py`` file::
+
+    extensions = [
+        'pbr.sphinxext',
+        # ... other extensions
+    ]
+
+You should also unset/remove the ``version`` and ``release`` attributes from
+this file.
+
 .. _setuptools: http://www.sphinx-doc.org/en/stable/setuptools.html
+.. _sphinxcontrib-apidoc: https://pypi.org/project/sphinxcontrib-apidoc/
+.. _reno: https://docs.openstack.org/reno/latest/
