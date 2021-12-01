@@ -9,6 +9,8 @@ doc/source/reference/api/
 
 # Files created by releasenotes build
 releasenotes/build
+releasenotes/notes/reno.cache
+RELEASENOTES.rst
 
 # Packages/installer info
 *.egg
@@ -24,7 +26,7 @@ develop-eggs
 .installed.cfg
 
 # Other
-.testrepository
+.stestr/
 .tox
 .venv
 .*.swp
